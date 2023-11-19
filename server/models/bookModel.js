@@ -28,7 +28,7 @@ const bookSchema = mongoose.Schema(
     },
   },
   {
-    timeStamp: true, // This is a creation date
+    timestamps: true, // This is a creation date
   }
 );
 

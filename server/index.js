@@ -1,4 +1,4 @@
-import express from "express";
+import express, { response } from "express";
 import { PORT, mongoDBURL } from "./config.js";
 import mongoose from "mongoose";
 import { Book } from "./models/bookModel.js";
@@ -15,7 +15,7 @@ app.get("/", (request, response) => {
 });
 
 // Http route connection to save a new book entry with the POST method:
-app.post("/books", async (response, request) => {
+app.post("/books", async (request, response) => {
   try {
     if (
       !request.body.title ||
@@ -42,6 +42,20 @@ app.post("/books", async (response, request) => {
     console.log(request);
   } catch (error) {
     console.log(`Could not create entry, Error message: ${error.message}`);
+    response.status(500).send({ message: error.message });
+  }
+});
+
+// Http route to get all of the book entries from the database:
+app.get("/books", async (request, response) => {
+  try {
+    const findBooks = await Book.find({});
+    return response.status(200).json({
+      count: findBooks.length,
+      data: findBooks,
+    });
+  } catch (error) {
+    console.log(error.message);
     response.status(500).send({ message: error.message });
   }
 });
