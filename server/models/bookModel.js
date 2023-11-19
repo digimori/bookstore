@@ -20,11 +20,11 @@ const bookSchema = mongoose.Schema(
     },
     ISBN: {
       type: Number,
-      required: true,
+      required: false,
     },
     pageCount: {
       type: Number,
-      required: true,
+      required: false,
     },
   },
   {
