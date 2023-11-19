@@ -200,18 +200,215 @@ const bookSchema = mongoose.Schema(
     },
      ISBN: {
       type: Number,
-      required: true,
+      required: false, // Not necessarily available or important to some people
     },
      pageCount: {
       type: Number,
-      required: true,
+      required: false, // Like the ISBN
     },
   },
   {
-    timeStamp: true, // This is a creation date
+    timestamps: true, // This is a creation date
   }
 );
 
 
 export const Book = mongoose.model('Book', bookSchema);
 ```
+
+## Saving a new Book with Mongoose:
+
+- Import the model from the bookModel.js file
+
+```
+import { Book } from './models/bookModel.js;
+```
+
+- A new HTTP route will be needed to manage the creation and saving of the new book entries (POST method):
+
+```
+app.post("/books", async (response, request) => {
+  try {
+    // Handles successful POST request
+    // Checking if all of the required fields are in the body of the response (! would mean that them not being found is true):
+    if (
+      !request.body.title ||
+      !request.body.author ||
+      !request.body.publicationDate ||
+      !request.body.description
+    ) {
+      return response.status(400).send({
+        message:
+          "Please send all required fields: title, author, publicationDate, description.",
+      });
+    }
+
+    // However, if the request is returned successfully, we now want to create a newBook object to handle the creation:
+    const newBook = {
+      title: request.body.title,
+      author: request.body.author,
+      publicationDate: request.body.publicationDate,
+      description: request.body.description,
+    };
+
+    const book = await Book.create(newBook);
+    return response.status(201).send(book); // Book sent to client
+
+    console.log(request);
+  } catch (error) {
+    // Handles the error and returns the error message
+    console.log(`Could not create entry, Error message: ${error.message}`);
+    response.status(500).send({ message: error.message });
+  }
+});
+
+```
+
+## Testing the POST request using Postman:
+
+- **Note: Make sure your port is exposed, otherwise it will throw an auth error**
+
+- You will need Middleware to parse the request body in index.js:
+
+```
+app.use(express.json());
+```
+
+- Create an Account at Postman
+- On the dashboard, create a new POST request:
+
+- Paste in the URL of your workspace (localHost if using as: http://localhost:5555/books)
+- I'm using Gitpod, so it will be 5555-YourWorkspaceName/books
+- Before sending, select the "Body" tag and tick 'raw' and under the 'text' dropdown, select JSON.
+- Input test data into the body (Ideally matching the function you're using to test the request receipt):
+
+```
+{
+  "title": "TestTitle",
+  "author": "Testauthor",
+  "publicationDate": "1234",
+  "description": "testDesc
+}
+```
+
+- Then Send.
+
+## Getting All of the books using Mongoose (Will be needed to GET/POST):
+
+```
+// Http route to get all of the book entries from the database:
+app.get("/books", async (request, response) => {
+  try {
+    const findBooks = await Book.find({});
+    return response.status(200).json({
+      count: findBooks.length, // This will return the number of entries in the database
+      data: findBooks // Return array object with the collections
+    });
+  } catch (error) {
+    console.log(error.message);
+    response.status(500).send({ message: error.message });
+  }
+});
+```
+
+- Again, Test this in Postman via GET request, paste the host url in with /books on the end, hit Send, should return 200:
+
+## Getting single entries by ID from Mongoose:
+
+- Remember to run this through Postman to test requests.
+- Get request will be the same as the previous one for "all" but with the id added to the end.
+
+```
+app.get("/books/:id", async (request, response) => {
+  try {
+    const { id } = request.params; // Destructuring the ID from the entry's parameters into an id variable.
+    const singleBook = await Book.findById(id); // Passing the destructured value into the findById method.
+    return response.status(200).json(singleBook);
+  } catch (error) {
+    console.log(error.message);
+    response.status(500).send({ message: error.message });
+  }
+});
+```
+
+## Updating entries:
+
+- Updating is done via PUT method using Mongoose's findByIdAndUpdate() method.
+
+```
+app.put("/books/:id", async (request, response) => {
+  // We first have to retrieve the entry that we want to edit.
+  try {
+    if (
+      !request.body.title ||
+      !request.body.author ||
+      !request.body.publicationDate ||
+      !request.body.description
+    ) {
+      return response.status(400).send({
+        message:
+          "Please send all required fields: title, author, publicationDate, description.",
+      });
+    }
+    // Then we collect the id and pass both that and the parameter fields through the findByIdAndUpdate method.
+    const { id } = request.params;
+    const bookUpdate = await Book.findByIdAndUpdate(id, request.body); // Pulling the id and passing the results of the request.body
+    if (!bookUpdate) {
+      return response.status(404).json({ message: "Book Entry not found." });
+    }
+    return response
+      .status(200)
+      .send({ message: "Book entry updated successfully." });
+  } catch (error) {
+    console.log(`Could not update entry, Error message: ${error.message}`);
+    response.status(500).send({ message: error.message });
+  }
+});
+```
+
+- Once again, test with Postman via Put method with the entry id.
+- You can also send test data via the Body using raw JSON, like when we initially tested the Post.
+
+## Deleting Entries:
+
+- Deleting Entries follows a similar process as update, but is much simpler.
+- Get the book id and delete it using findByIdAndDelete.
+
+```
+app.delete("/books/:id", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const bookDelete = await Book.findByIdAndDelete(id); // Pulling the id and passing the results of the request.body
+
+    if (!bookDelete) {
+      return response
+        .status(404)
+        .json({ message: "Book Entry has not been deleted" });
+    }
+    return response
+      .status(200)
+      .send({ message: "Book entry successfully deleted." });
+  } catch (error) {
+    console.log(`Could not delete entry, Error message: ${error.message}`);
+    response.status(500).send({ message: error.message });
+  }
+});
+```
+
+## Refactoring NodeJS with Express Router:
+
+## CORS policies:
+
+## Create React App using Vite and installing TailwindCSS
+
+## SPA and React-Router-Dom
+
+## Showing Books list in React
+
+## CRUD process in React:
+
+## Showing Lists in components: (Map?)
+
+## Modals:
+
+## UX improvements:
