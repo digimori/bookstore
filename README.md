@@ -8,10 +8,12 @@ React Book Store Application utilizing MERN stack.
 - NodeJS - JavaScript serverside run-time environment allowing the rest of the stack to be used outside of the browser
 
 ## Workspace Setup:
+
 In your chosen code editor (For this, I am using Gitpod for ease of use as it comes with many packages such as NodeJS installed),  
 If you don't, you're going to need to install it on your system and install it into your editor such as VSCode
 
 ### Base File tree:
+
 - Folder - server (server)
 - Folder - client (front-end/client)
 - File - .gitignore
@@ -32,7 +34,7 @@ If you don't, you're going to need to install it on your system and install it i
 ```
  "scripts" : {
   "start" : "node index.js", // This will run the project using a node.js environment
-  "dev" : "nodemon index.js" 
+  "dev" : "nodemon index.js"
  }
 ```
 
@@ -469,25 +471,252 @@ app.use(
 ```
 
 ## Client-Side (React):
+
 ### Project Initialization using Vite and TailwindCSS:
+
 - Remember to go back up into the root folder!
+
 ```
 cd /
 ```
+
 - Installation:
+
 ```
 npm create vite@latest
 ```
+
 - Select 'y'.
 - Project name: 'frontend' or 'client' to keep it cohesive.
 - Select 'React'
 - then 'JavaScript'
+- Once app is created:
 
-## Create React App using Vite and installing TailwindCSS
+```
+cd client
+npm install
+// npm run dev is to start the server after.
+```
 
-## SPA and React-Router-Dom
+- Next, Install TailwindCSS:
+- Go to [TailwindCSS.com](https://tailwindcss.com/);
+- Installation > Framework Guides > Vite > Using React
+- Follow the steps provided
 
-## Showing Books list in React
+```
+npm install -D tailwindcss postcss autoprefixer
+// Wait for this to install, then:
+npx tailwindcss init -p
+// This creates a Config file for Tailwind
+```
+
+- The next step is for your dependencies, so these will go into your tailwind.config file:
+
+```
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+```
+
+- Then, in your index.css file that was also installed with Tailwind, replace the dummy code with:
+
+```
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+- App.css can be removed at this point as it will not be being used for this project.
+
+- Now, run the build process:
+
+```
+npm run dev
+```
+
+- Following this, we can also replace the default App content in App.jsx with an RAFCE snippet, make sure ES7+ snippets are installed in your IDE.
+
+## Single-Page-Application (SPA) and React-Router-Dom:
+
+- Change directory into the client folder
+- Install React-Router-Dom
+
+```
+npm install react-router-dom
+```
+
+- In 'Main.jsx', import the router:
+
+```
+import {BrowserRouter} from 'react-router-dom';
+```
+
+- We then need to change the App container from 'React.StrictMode' to BrowserRouter:
+
+```
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+);
+```
+
+- We then import and create the routes in App.jsx:
+- Each Route will need a path reference and an element (which will be the component it will refer to).
+
+```
+import {Routes, Route } from 'react-router-dom';
+<Routes>
+<Route path='/' element={<Home />} />
+<Route path='/books/create' element={<CreateBooks />} />
+<Route path='/books/details/:id' element={<ShowBooks />} />
+</Routes>
+```
+
+- To handle the pages, we'll need a new folder in client > src > [folder here named 'pages']
+- Within that, we need page components to handle the CRUD functionality:
+- CreateBooks.jsx
+- DeleteBook.jsx
+- EditBook.jsx
+- Home.jsx
+- ShowBook.jsx
+
+- These, populate them with the RAFCE snippet to give a base to work with.
+- These paths will go into the Routes above (They will need to be imported at the top of App.jsx).
+
+## Showing Books list in React:
+
+- Additional NPM packages:
+- Axios is used for sending HTTP requests and is a common method used in APIs (for example, RapidAPI)
+- React-Icons just gives us an icons base to use, you can use FontAwesome or something like 8Icons instead if you prefer.
+
+```
+npm install axios react-icons
+```
+
+- Following this, we need to test the backend routes:
+  So, for this, we actually need to change our original CORS policy back over to the basic one (We will change back later):
+
+```
+app.use(cors())
+```
+
+- Change directory back to the server and run.
+- Open a second terminal, so that we can compare client and server side by side, CD into the client side on this one.
+- Run both of the servers
+
+### Component structure:
+
+- client > src > components (new folder creation)
+- New component: Loader.jsx (We will be using this component when waiting for information so that the user can see that something is happening.)
+- All we need in here is the following for now, utilizing Tailwind's inline CSS:
+
+```
+const Loader = () => {
+  return <div className="animate-ping w-16 h-16 m-8 rounded-full bg-sky-600"></div>;
+};
+
+export default Loader;
+```
+
+- Within the Home.jsx component, we need to import the following:
+
+```
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import Loader from "../components/Loader.jsx"; // For Async/Await requests
+import { Link } from "react-router-dom"; // In order to use links within the page
+// Some icons to make the page more user friendly
+import { AiOutlineEdit } from "react-icons/ai";
+import { BsInfoCircle } from "react-icons/bs";
+import { MdOutlineAddBox, MdOutlineDelete } from "react-icons/md";
+```
+
+- We will be using useState and useEffect to manage the component lifecycles.
+- Axios is the reference back to the HTTP requests.
+
+### State Management in the Home.jsx component:
+
+```
+const [books, setBooks] = useState([]); // Initial State is set to an empty array
+  const [loading, setLoading] = useState(false);  // Initial state for loading the content
+```
+
+- A useEffect with an empty dependency parameter will be used to manage the Update lifecycle:
+
+```
+useEffect(() => {
+    setLoading(true); // Start loading the content
+    axios
+      .get(
+        "http://5555-digimori-bookstore-6c00cvdc0rz.ws-eu106.gitpod.io/books"
+      ) // Bear in mind, Gitpod changes this often, in case it stops working.
+      .then((response) => {
+        setBooks(response.data.data);
+        setLoading(false); // Stop loading once the data has been received.
+      })
+      .catch((error) =>{
+        console.log(error);
+        setLoading(false); // If the data cannot be retreived, stop attempting and pass an error to the user.
+      });
+  }, []);
+
+```
+
+## Constructing the JSX and Using Ternaries to display one or another:
+
+- Basic JSX construction with a Link component taking us to the CreateBooks component page:
+
+```
+return (
+    <div className="p-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl my-8">Books List:</h1>
+        <Link to="/books/create">
+          <MdOutlineAddBox className="text-sky-800 text-4xl" />
+        </Link>
+      </div>
+    </div>
+  );
+
+```
+
+- Under this, we will be getting the list of entries that have already been created via a Ternary operation:
+- Remember, if Left side is true, the first block (?) runs, else (:) the second will return a table.
+
+```
+{loading ? (
+  <Loader />
+) : (
+ <Table element here /> (Though I'd be tempted to turn it into another component)
+)
+}
+```
+
+- For the body of the table, you can loop over the book entries using the map method:
+- Book and Index will be passed through as arguments (as each index will need a key to identify it also).
+- This will use templating pattern like {book.title}, {book.author} etc.
+
+```
+{books.map((book, index) =>(
+              <tr key={book._id} className="h-8">
+                <td className="border border-slate-700 rounded-md text-center">
+                  {index + 1} // + 1 is due to index being zero-based, and no entry is going to start at 0, it will be 1.
+                </td>
+                <td className="border border-slate-700 rounded-md text-center">
+                  {book.title}
+                </td>
+              </tr>
+            ))}
+```
 
 ## CRUD process in React:
 
@@ -499,7 +728,7 @@ npm create vite@latest
 
 ## Further improvements to make:
 
-- Additional model fields, such as the ability to upload images of the books
+- Additional model fields, such as the ability to upload images of the books, rating system? Ability to sort by rating?
 - Auth to allow users to have their own storage
 - Search Field
 - A tick box to tell whether or not the book has been read or not
