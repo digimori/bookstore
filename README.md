@@ -720,6 +720,109 @@ return (
 
 ## CRUD process in React:
 
+### Getting Entry information and displaying it (Read):
+
+- Starting with the Getting of all of the entries and showing them.
+- We need a back button to handle moving between pages (Though I might change this later to be like my Flask project, where edits are done via Modal.)
+
+- Create a BackButton.jsx file in the components folder with an RAFCE snippet.
+- Import {Link} from 'react-router-dom';
+- Set a destination prop for this button to pass through the BackButton function:
+
+```
+{destination ='/'} // Links back to root/home.
+```
+
+- Style button as you want, it will be used for navigation later.
+
+- In the ShowBooks.jsx component use the following imports:
+
+```
+import {useState, useEffect} from 'react';
+import axios from 'axios';
+import {useParams} from 'react-router-dom';
+import BackButton from '../components/BackButton.jsx';
+import Loader from '../components/Loader.jsx';
+```
+
+- We need to pass this data through using useState and useEffect alongside an Axios call:
+- Notes have been added to explain what is happening with the component lifecycles at this point.
+
+```
+// UseState for handling the showing of the books (as it's a state change to go from none to show):
+  const [book, setBook] = useState({}); // Empty object passed as it will be populated with the book entry object when state is changed.
+  const [loading, setLoading] = useState(false); // Initial state is no data is loaded. This will change when we load.
+  const { id } = useParams(); // Destructured the id of the entries from useParams
+
+  useEffect(() => {
+    setLoading(true); // State changes to true on component mount
+    axios
+      .get(
+        `http://5555-digimori-bookstore-6c00cvdc0rz.ws-eu106.gitpod.io//books/${id}`
+      )
+      .then((response) => {
+        setBook(response.data); // Changes state to return the data loaded from Axios response
+        setLoading(false); // Once request is resolved, stop trying to get the data from this request
+      })
+      .catch((error) => {
+        console.log(error);
+        setLoading(false);
+      });
+  }, []);
+```
+
+### Create Book entries:
+
+- In the CreateBook component, we again need some imports, many are like the ones for the "Read" process:
+
+```
+import React, {useState, useEffect} from 'react';
+import BackButton from '../components/BackButton';
+import Loader from '../components/Loader';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+```
+
+- We use states in order to allow the editing of the fields, else you won't be able to type into them:
+
+```
+const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [publicationDate, setPublicationDate] = useState(""); // This we could probably consider turning into a date picker later.
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate(); // Re-Routes after creating a book
+
+// Function to handle saving the book data and posting it.
+  const handleSaveBook = () => {
+    const data = {
+      title,
+      author,
+      publicationDate,
+    };
+    setLoading(true);
+    axios
+      .post(
+        `https://5555-digimori-bookstore-6c00cvdc0rz.ws-eu106.gitpod.io/books/${id}`,
+        data
+      ) // Second parameter is the data posted
+      .then(() => {
+        setLoading(false); // Stops data moving once sent
+        navigate("/"); // Returns to home page after posting
+      })
+      .catch((error) => {
+        setLoading(false);
+        alert(
+          `An Error has occured: ${error}. Please Check console for further information.`
+        );
+        console.log(error);
+      });
+  };
+```
+
+### Update/Edit Entries:
+
+### Delete Entries:
+
 ## Showing Lists in components: (Map?)
 
 ## Modals:
