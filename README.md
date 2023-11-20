@@ -1,22 +1,17 @@
-# bookstore
+# Book Storage App (Re-doing my Flask/Python project using MERN)
 
 React Book Store Application utilizing MERN stack.
 
-### MongoDB - A NoSQL Database that utilizes document based databasing
-
-### ExpressJS - A Web framework
-
-### ReactJS - A JavaScript library
-
-### NodeJS - JavaScript serverside run-time environment allowing the rest of the stack to be used outside of the browser
+- MongoDB - A NoSQL Database that utilizes document based databasing
+- ExpressJS - A Web framework
+- ReactJS - A JavaScript library
+- NodeJS - JavaScript serverside run-time environment allowing the rest of the stack to be used outside of the browser
 
 ## Workspace Setup:
-
 In your chosen code editor (For this, I am using Gitpod for ease of use as it comes with many packages such as NodeJS installed),  
 If you don't, you're going to need to install it on your system and install it into your editor such as VSCode
 
-## Base File tree:
-
+### Base File tree:
 - Folder - server (server)
 - Folder - client (front-end/client)
 - File - .gitignore
@@ -24,7 +19,7 @@ If you don't, you're going to need to install it on your system and install it i
 
 ## Project Initialization:
 
-### Backend:
+### Backend/Node/Express:
 
 - cd server/ - This is to change directory into the backend, where we will install the following:
 - npm init -y - To initialize a JSON package to manage dependencies
@@ -37,7 +32,8 @@ If you don't, you're going to need to install it on your system and install it i
 ```
  "scripts" : {
   "start" : "node index.js", // This will run the project using a node.js environment
-  "dev" : "nodemon index.js" //
+  "dev" : "nodemon index.js" 
+ }
 ```
 
 ### Express setup in the backend:
@@ -103,7 +99,7 @@ app.get('/', (request, response) => {
 
 - This should now return "Request completed", on browser refresh.
 
-## Adding MongoDB and Mongoose:
+### Adding MongoDB and Mongoose:
 
 - Create a MongoDB account [here]() if you do not already have one.
 - Create a new Cluster, setting the provider to your preference (AWS, GoogleCloud or Azure)
@@ -147,7 +143,7 @@ npm install mongoose
 import mongoose from 'mongoose';
 ```
 
-## Connecting the Database:
+### Connecting the Database:
 
 - In index.js
 
@@ -167,7 +163,7 @@ console.log('Error message')
 })
 ```
 
-## Creating the Book model with Mongoose:
+### Creating the Book model with Mongoose:
 
 [mongooseJS.com](https://mongoosejs.com)
 
@@ -216,7 +212,7 @@ const bookSchema = mongoose.Schema(
 export const Book = mongoose.model('Book', bookSchema);
 ```
 
-## Saving a new Book with Mongoose:
+### Saving a new Book with Mongoose:
 
 - Import the model from the bookModel.js file
 
@@ -264,7 +260,7 @@ app.post("/books", async (response, request) => {
 
 ```
 
-## Testing the POST request using Postman:
+### Testing the POST request using Postman:
 
 - **Note: Make sure your port is exposed, otherwise it will throw an auth error**
 
@@ -293,7 +289,7 @@ app.use(express.json());
 
 - Then Send.
 
-## Getting All of the books using Mongoose (Will be needed to GET/POST):
+### Getting All of the books using Mongoose (Will be needed to GET/POST):
 
 ```
 // Http route to get all of the book entries from the database:
@@ -313,7 +309,7 @@ app.get("/books", async (request, response) => {
 
 - Again, Test this in Postman via GET request, paste the host url in with /books on the end, hit Send, should return 200:
 
-## Getting single entries by ID from Mongoose:
+### Getting single entries by ID from Mongoose:
 
 - Remember to run this through Postman to test requests.
 - Get request will be the same as the previous one for "all" but with the id added to the end.
@@ -331,7 +327,7 @@ app.get("/books/:id", async (request, response) => {
 });
 ```
 
-## Updating entries:
+### Updating entries:
 
 - Updating is done via PUT method using Mongoose's findByIdAndUpdate() method.
 
@@ -369,7 +365,7 @@ app.put("/books/:id", async (request, response) => {
 - Once again, test with Postman via Put method with the entry id.
 - You can also send test data via the Body using raw JSON, like when we initially tested the Post.
 
-## Deleting Entries:
+### Deleting Entries:
 
 - Deleting Entries follows a similar process as update, but is much simpler.
 - Get the book id and delete it using findByIdAndDelete.
@@ -395,9 +391,97 @@ app.delete("/books/:id", async (request, response) => {
 });
 ```
 
-## Refactoring NodeJS with Express Router:
+### Refactoring NodeJS with Express Router:
 
-## CORS policies:
+- Put all of the HTTP routes into a separate file-folder, otherwise this is going to get messy.
+- In server, create folder named "routes"
+- In the folder, make a file for 'bookRoute.js'. This is useful as we can make separate ones if we have multiple models to handle.
+- Paste the copied HTTP routes into bookRoute.js
+- Import and create the express Router:
+
+```
+import express from 'express';
+import {Book} from './models/bookModel.js';
+
+const router = express.Router();
+```
+
+- Following this, all of the "app" in the requests (ie "app.get") need to be changed to "router" to match the variable we created.
+- Example:
+
+```
+router.post('/books', async(request, response) => {})
+```
+
+- REMEMBER TO EXPORT!
+
+```
+export default router;
+```
+
+- Import these routes back into your main app index.js:
+
+```
+import booksRoute from './routes/bookRoutes.js';
+```
+
+- Following this, we can now remove the reference to 'books' in our routes, as the middleware that comes next will handle this (The /:id will stay, however).
+  ie:
+
+```
+router.get('/', async(request, response) => {})
+```
+
+- The middleware that will handle this in place of the routes in index.js is:
+
+```
+app.use('/books', booksRoute); // This is basically saying to preface the routes with /books, which is why it isn't needed in the other file.
+```
+
+- Remember to once again test these with Postman to ensure the requests are received and sending correctly.
+
+### CORS policies (Cross-Origin-Resource-Sharing):
+
+- CORS policies are security policies used for sending/receiving information between different domains, ie forms.
+- In the server, we need to install cors:
+
+```
+npm install cors
+```
+
+- This then needs to be imported and used as a middleware in index.js:
+
+```
+import cors from 'cors';
+
+// Middleware, but we have options:
+// 1. Allow All Origins with Default of cors(*)
+app.use(cors());
+// 2. Allow custom Origins, this allows for more control:
+app.use(
+  cors({
+    origin: 'LocalHost/IDEHost', // Such as 'http://localhost:3000', Only clients from this origin can access the server-side.
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Methods we're currently using
+    allowedHeaders: ['Content-Type'],
+
+  }));
+
+```
+
+## Client-Side (React):
+### Project Initialization using Vite and TailwindCSS:
+- Remember to go back up into the root folder!
+```
+cd /
+```
+- Installation:
+```
+npm create vite@latest
+```
+- Select 'y'.
+- Project name: 'frontend' or 'client' to keep it cohesive.
+- Select 'React'
+- then 'JavaScript'
 
 ## Create React App using Vite and installing TailwindCSS
 
@@ -412,3 +496,10 @@ app.delete("/books/:id", async (request, response) => {
 ## Modals:
 
 ## UX improvements:
+
+## Further improvements to make:
+
+- Additional model fields, such as the ability to upload images of the books
+- Auth to allow users to have their own storage
+- Search Field
+- A tick box to tell whether or not the book has been read or not
