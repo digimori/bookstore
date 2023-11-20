@@ -10,13 +10,14 @@ const app = express();
 app.use(express.json());
 
 // Middleware handling CORS policy:
-app.use(
+app.use(cors());
+/*app.use(
   cors({
     origin: "LocalHost/IDEHost",
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type"],
   })
-);
+);*/
 
 // Http route connection for root:
 app.get("/", (request, response) => {
