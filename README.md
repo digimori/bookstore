@@ -821,7 +821,91 @@ const [title, setTitle] = useState("");
 
 ### Update/Edit Entries:
 
+- The process is similar to Entry creation, only we use a PUT request now for editing instead of POST:
+- Remember to also pass in the ID for the request so the browser knows to target specific entries.
+- A useEffect hook is used here to handle the ComponentDidUpdate portion of the component lifecycle
+
+```
+useEffect(() => {
+    setLoading(true);
+    axios
+      .get(
+        `https://5555-digimori-bookstore-6c00cvdc0rz.ws-eu106.gitpod.io/books/${id}`
+      )
+      .then((response) => {
+        setAuthor(response.data.author);
+        setTitle(response.data.title);
+        setPublicationDate(response.data.publicationDate);
+        setDescription(response.data.description);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setLoading(false);
+        alert(
+          `An error has Occured: ${error}, please check the console for more information.`
+        );
+        console.log(`Error: ${error}`);
+      });
+  }, []);
+
+  const handleEditBook = () => {
+    const data = {
+      title,
+      author,
+      publicationDate,
+      description,
+    };
+    setLoading(true);
+    axios
+      .put(
+        `https://5555-digimori-bookstore-6c00cvdc0rz.ws-eu106.gitpod.io/books/${id}`,
+        data
+      )
+      .then(() => {
+        setLoading(false);
+        navigate("/");
+      })
+      .catch((error) => {
+        setLoading(false);
+        alert(
+          `An Error has occured: ${error}. Please Check console for further information.`
+        );
+        console.log(error);
+      });
+  };
+
+```
+
 ### Delete Entries:
+
+- Deletion is the simplest step in the CRUD process (We should consider a security modal to stop accidental deletions).
+
+```
+const DeleteBook = () => {
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { id } = useParams();
+
+  const handleDeleteBook = () => {
+    setLoading(true);
+    axios
+      .delete(
+        `https://5555-digimori-bookstore-6c00cvdc0rz.ws-eu106.gitpod.io/books/${id}`
+      )
+      .then(() => {
+        setLoading(false);
+        console.log(`Book Deleted Successfully.`);
+        navigate("/");
+      })
+      .catch((error) => {
+        setLoading(false);
+        console.log(
+          `Book could not be deleted: Error: ${error},  please refer to console for more information.`
+        );
+      });
+  }};
+
+```
 
 ## Showing Lists in components: (Map?)
 
